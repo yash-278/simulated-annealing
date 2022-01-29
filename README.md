@@ -43,7 +43,7 @@ In conclusion, simulated annealing can be used find solutions to Traveling Sales
 
 [1] Traveling salesman problem, Dec 2016.
 
-[2] [Karolis Juodel](https://cs.stackexchange.com/users/5167/karolisjuodel) When does the nearest neighbor heuristic fail for the
+[2] [Karolis Juodel](https://cs.stackexchange.com/users/5167/karolis-juodel%c4%97) When does the nearest neighbor heuristic fail for the
 traveling salesperson? Computer Science Stack Exchange.
 [URL](https://cs.stackexchange.com/q/13744): (version: 2013-08-30).
 
