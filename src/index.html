@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Simulated Annealing: The Travelling Salesman Problem</title>
+    <link rel="stylesheet" href="../dist/output.css" type="text/css" />
+    <meta name="keywords" content="simulated, annealing, travelling, salesman" />
+    <meta name="description" content="Simulated Annealing: The Travelling Salesman Problem" />
+    <meta name="author" content="John Walker" />
+    <meta name="robots" content="index" />
+
+    <script src="../scripts/travel.js"></script>
+    <script src="../scripts/solve.js"></script>
+    <script src="../scripts/display.js"></script>
+    <script src="../custom-scripts/reader.js"></script>
+    <script src="../custom-scripts/tsplib.js"></script>
+  </head>
+
+  <body class="standard bg-cyan-700 text-white max-w-7xl mx-auto" onload="tspInit();">
+    <table style="width: 100%" class="my-5">
+      <tr>
+        <td class="l">
+          <a href="https://www.yashkadam.cf" class="i text-2xl font-bold mr-2">Yash Kadam</a>
+          |
+          <a href="https://www.yashkadam.cf" class="i text-2xl font-bold ml-2">Github</a>
+        </td>
+        <td class="r text-right">
+          <h1 class="c" style="margin-bottom: 0px">Simulated Annealing</h1>
+          <h2 class="c" style="margin-top: 0px">The Travelling Salesman Problem</h2>
+        </td>
+      </tr>
+    </table>
+
+    <hr />
+    <div class="flex">
+      <div class="c w-1/2" style="margin-top: 1em">
+        <canvas
+          id="map"
+          width="468"
+          height="468"
+          class="mx-auto rounded-md"
+          style="border: 1px solid black"
+        >
+          <b>Your browser does not support HTML5 canvas.</b>
+        </canvas>
+        <table class="c">
+          <tr style="width: 100%">
+            <td class="space-x-4 py-2">
+              <input
+                type="button"
+                id="solve"
+                class="bg-gray-300 px-3 py-2 text-gray-800 rounded cursor-pointer"
+                value="Solve"
+                onclick="solveButton();"
+              />
+
+              <input
+                type="button"
+                id="step"
+                class="bg-gray-300 px-3 py-2 text-gray-800 rounded cursor-pointer"
+                value="Step"
+                onclick="stepButton();"
+              />
+
+              <input
+                type="button"
+                id="animate"
+                class="bg-gray-300 px-3 py-2 text-gray-800 rounded cursor-pointer"
+                value="Animate"
+                onclick="animateButton();"
+              />
+            </td>
+          </tr>
+          <tr style="width: 100%">
+            <td class="space-x-4 py-2">
+              <input
+                type="button"
+                id="new"
+                class="bg-gray-300 px-3 py-2 text-gray-800 rounded cursor-pointer"
+                value="New"
+                onclick="newButton();"
+              />
+
+              <input
+                type="button"
+                id="place"
+                class="bg-gray-300 px-3 py-2 text-gray-800 rounded cursor-pointer"
+                value="Place"
+                onclick="placeButton();"
+              />
+
+              <input
+                type="text"
+                id="ncities"
+                class="bg-gray-100 px-3 py-2 text-gray-800 rounded cursor-pointer"
+                value="30"
+                size="4"
+                maxlength="4"
+              />
+
+              cities
+            </td>
+          </tr>
+          <tr style="width: 100%">
+            <td class="space-x-4 py-2">
+              <select id="goal" class="px-3 py-2 text-gray-800 rounded">
+                <option value="1">Minimise</option>
+                <option value="-1">Maximise</option>
+              </select>
+              path length &nbsp;
+              <!-- River cost -->
+              <input
+                type="text"
+                id="rcost"
+                value="0"
+                onchange="changed = true;"
+                size="4"
+                maxlength="4"
+                class="hidden"
+              />
+              <label>
+                <input
+                  type="checkbox"
+                  id="trace"
+                  class="checked:bg-blue-500"
+                  onchange="traceChanged();"
+                />
+                Trace solution
+              </label>
+            </td>
+          </tr>
+          <!-- <tr style="width: 100%">
+            <td class="space-x-4 py-2">
+              <label>
+                <input type="checkbox" id="tsplibc" onchange="tsplibChanged();" />
+                TSPLIB tools
+              </label>
+            </td>
+          </tr> -->
+        </table>
+      </div>
+
+      <div id="console" class="w-1/2 p-5" style="display: none">
+        <div class="c">
+          <p></p>
+
+          <textarea
+            id="log"
+            cols="70"
+            rows="22"
+            class="bg-gray-300 p-3 rounded-md text-gray-800"
+          ></textarea>
+          <br />
+          <input type="button" id="clearconsole" value="Clear" onclick="log.value = '';" />
+        </div>
+      </div>
+    </div>
+    <div id="tsplib" style="display: none">
+      <div class="c">
+        <p></p>
+
+        <textarea id="tsprob" cols="80" rows="12"></textarea>
+        <br />
+        <input type="button" id="cleartsprob" value="Clear" onclick="tsprob.value = '';" />
+        <input
+          type="button"
+          id="loadtsprob"
+          value="Load Problem"
+          onclick="tsplib_load_problem(tsprob.value);"
+        />
+        <input
+          type="button"
+          id="loadtspsol"
+          value="Load Solution"
+          onclick="tsplib_load_solution(tsprob.value, false);"
+        />
+        <input
+          type="button"
+          id="savetsprob"
+          value="Save Problem"
+          onclick="tsprob.value = tsplib_output_map();"
+        />
+        <input
+          type="button"
+          id="savetspsol"
+          value="Save Solution"
+          onclick="tsprob.value = tsplib_output_tour();"
+        />
+        <br />
+        Problem: &nbsp;
+        <input type="file" id="P_problemfile" size="40" name="myfile.tsp" accept=".tsp,.tour" />
+        <input type="button" id="P_loadproblemfile" value="Load" onclick="loadProblemFile();" />
+        <br />
+        Problem URL: &nbsp;
+        <input
+          type="text"
+          id="P_problemurl"
+          size="40"
+          value=""
+          onkeydown="if (event.keyCode == 13) { document.getElementById('P_loadproblemurl').click(); }"
+        />
+        <select
+          id="P_problems"
+          title="Green indicates an optimal solution is known."
+          onchange="document.getElementById('P_problemurl').value = document.getElementById('P_problems').value; loadProblemURL(document.getElementById('P_problemurl').value, false);"
+        >
+          <option value="" disabled="disabled" selected="selected">&nbsp;</option>
+          <option class="geo" value="burma14">Burma: 14 Cities (Zaw Win)</option>
+          <option class="s geo" value="ulysses16!">
+            Ulysses: 16 Site Odyssey (Groetschel/Padberg)
+          </option>
+          <option class="geo" value="ulysses22!">
+            Ulysses: 22 Site Odyssey (Groetschel/Padberg)
+          </option>
+          <option class="s att" value="att48!">USA: 48 State Capitals (Padberg/Rinaldi)</option>
+          <option class="s euc_2d" value="eil51!">Cities: 51 Cities (Christofides/Eilon)</option>
+          <option class="s euc_2d" value="berlin52!">Berlin: 52 Locations (Groetschel)</option>
+          <option class="s euc_2d" value="st70!">Cities: 70 Cities (Smith/Thompson)</option>
+          <option class="s euc_2d" value="eil76!">Cities: 76 Cities (Christofides/Eilon)</option>
+          <option class="s euc_2d" value="pr76!">Cities: 76 Cities (Padberg/Rinaldi)</option>
+          <option class="s geo" value="gr96!">Africa: 96 Cities (Groetschel)</option>
+          <option class="euc_2d" value="rat99">Rattled Grid: 99 Sites (Pulleyblank)</option>
+          <option class="s euc_2d" value="kroA100!">
+            Cities: 100 Cities (Problem A) (Krolak/Felts/Nelson)
+          </option>
+          <option class="euc_2d" value="kroB100">
+            Cities: 100 Cities (Problem B) (Krolak/Felts/Nelson)
+          </option>
+          <option class="s euc_2d" value="kroC100!">
+            Cities: 100 Cities (Problem C) (Krolak/Felts/Nelson)
+          </option>
+          <option class="s euc_2d" value="kroD100!">
+            Cities: 100 Cities (Problem D) (Krolak/Felts/Nelson)
+          </option>
+          <option class="euc_2d" value="kroE100">
+            Cities: 100 Cities (Problem E) (Krolak/Felts/Nelson)
+          </option>
+          <option class="s euc_2d" value="rd100!">Cities: 100 Random Cities (Reinelt)</option>
+          <option class="s euc_2d" value="eil101!">Cities: 101 Cities (Christofides/Eilon)</option>
+          <option class="s euc_2d" value="lin105!">Cities: 105 Cities (Lin/Kernighan)</option>
+          <option class="euc_2d" value="pr107">Cities: 107 Cities (Padberg/Rinaldi)</option>
+          <option class="euc_2d" value="pr124">Cities: 124 Cities (Padberg/Rinaldi)</option>
+          <option class="euc_2d" value="bier127">
+            Augsberg: 127 Beer Gardens (Juenger/Reinelt)
+          </option>
+          <option class="s euc_2d" value="ch130!">Cities: 130 Cities (Churritz)</option>
+          <option class="euc_2d" value="pr136">Cities: 136 Cities (Padberg/Rinaldi)</option>
+          <option class="geo" value="gr137">America: 137 Cities (Groetschel)</option>
+          <option class="euc_2d" value="pr144">Cities: 144 Cities (Padberg/Rinaldi)</option>
+          <option class="s euc_2d" value="ch150!">Cities: 150 Cities (Churritz)</option>
+          <option class="euc_2d" value="kroA150">
+            Cities: 150 Cities (Problem A) (Krolak/Felts/Nelson)
+          </option>
+          <option class="euc_2d" value="kroB150">
+            Cities: 150 Cities (Problem B) (Krolak/Felts/Nelson)
+          </option>
+          <option class="euc_2d" value="pr152">Cities: 152 Cities (Padberg/Rinaldi)</option>
+          <option class="euc_2d" value="u159">Drilling: 159 Holes (Reinelt)</option>
+          <option class="euc_2d" value="rat195">Rattled Grid: 195 Sites (Pulleyblank)</option>
+          <option class="euc_2d" value="d198">Drilling: 198 Holes (Reinelt)</option>
+          <option class="euc_2d" value="kroA200">
+            Cities: 200 Cities (Problem A) (Krolak/Felts/Nelson)
+          </option>
+          <option class="euc_2d" value="kroB200">
+            Cities: 200 Cities (Problem B) (Krolak/Felts/Nelson)
+          </option>
+          <option class="s geo" value="gr202!">Europe: 202 Cities (Groetschel)</option>
+          <option class="euc_2d" value="ts225">
+            Cities: 225 Cities (Juenger,Raecke,Tschoecke)
+          </option>
+          <option class="s euc_2d" value="tsp225!">
+            Problem: 225 Points &ldquo;TSP&rdquo; (Reinelt)
+          </option>
+          <option class="euc_2d" value="pr226">Cities: 226 Cities (Padberg/Rinaldi)</option>
+          <option class="geo" value="gr229">Asia/Australia: 229 Cities (Groetschel)</option>
+          <option class="euc_2d" value="gil262">Cities: 262 Cities (Gillet/Johnson)</option>
+          <option class="euc_2d" value="pr264">Cities: 264 Cities (Padberg/Rinaldi)</option>
+          <option class="s euc_2d" value="a280!">Drilling: 280 Holes (Ludwig)</option>
+          <option class="euc_2d" value="pr299">Cities: 299 Cities (Padberg/Rinaldi)</option>
+          <option class="euc_2d" value="lin318">Cities: 318 Cities (Lin/Kernighan)</option>
+          <option class="euc_2d" value="rd400">Cities: 400 Random Cities (Reinelt)</option>
+          <option class="euc_2d" value="fl417">Drilling: 417 Holes (Reinelt)</option>
+          <option class="geo" value="gr431">Europe/Asia/Australia: 431 Cities (Groetschel)</option>
+          <option class="euc_2d" value="pr439">Cities: 439 Cities (Padberg/Rinaldi)</option>
+          <option class="s euc_2d" value="pcb442!">
+            Drilling: 442 Holes (Groetschel/Juenger/Reinelt)
+          </option>
+          <option class="euc_2d" value="d493">Drilling: 493 Holes (Reinelt)</option>
+          <option class="att" value="att532">USA: 532 Cities (Padberg/Rinaldi)</option>
+          <option class="att" value="ali535">
+            Airports: 535 Around the World (Padberg/Rinaldi)
+          </option>
+          <option class="euc_2d" value="u574">Drilling: 574 Holes (Reinelt)</option>
+          <option class="euc_2d" value="rat575">Rattled Grid: 575 Sites (Pulleyblank)</option>
+          <option class="euc_2d" value="p654">Drilling: 654 Holes (Reinelt)</option>
+          <option class="euc_2d" value="d657">Drilling: 657 Holes (Reinelt)</option>
+          <option class="s euc_2d" value="gr666!">World: 666 Cities (Groetschel)</option>
+          <option class="euc_2d" value="u724">Drilling: 724 Holes (Reinelt)</option>
+          <option class="euc_2d" value="rat783">Rattled Grid: 783 Sites (Pulleyblank)</option>
+          <option class="ceil_2d" value="dsj1000">Clustered Random: 1000 Points (Johnson)</option>
+          <option class="s euc_2d" value="pr1002!">Cities: 1002 Cities (Padberg/Rinaldi)</option>
+          <option class="euc_2d" value="u1060">Drilling: 1060 Holes (Reinelt)</option>
+          <option class="euc_2d" value="vm1084">Cities: 1084 Cities (Reinelt)</option>
+          <option class="euc_2d" value="pcb1173">Drilling: 1173 Holes (Juenger/Reinelt)</option>
+          <option class="euc_2d" value="d1291">Drilling: 1291 Holes (Reinelt)</option>
+          <option class="euc_2d" value="rl1304">Cities: 1304 Cities (Reinelt)</option>
+          <option class="euc_2d" value="rl1323">Cities: 1323 Cities (Reinelt)</option>
+          <option class="euc_2d" value="nrw1379">
+            Germany: 1379 Locations in Nordrhein-Westfalen (Bachem/Wottawa)
+          </option>
+          <option class="euc_2d" value="fl1400">Drilling: 1400 Holes (Reinelt)</option>
+          <option class="euc_2d" value="u1432">Drilling: 1432 Holes (Reinelt)</option>
+          <option class="euc_2d" value="fl1577">Drilling: 1577 Holes (Reinelt)</option>
+          <option class="euc_2d" value="d1655">Drilling: 1655 Holes (Reinelt)</option>
+          <option class="euc_2d" value="vm1748">Cities: 1748 Cities (Reinelt)</option>
+          <option class="euc_2d" value="u1817">Drilling: 1817 Holes (Reinelt)</option>
+          <option class="euc_2d" value="rl1889">Cities: 1889 Cities (Reinelt)</option>
+          <option class="euc_2d" value="d2103">Drilling: 2103 Holes (Reinelt)</option>
+          <option class="euc_2d" value="u2152">Drilling: 2152 Holes (Reinelt)</option>
+          <option class="euc_2d" value="u2319">Drilling: 2319 Holes (Reinelt)</option>
+          <option class="s euc_2d" value="pr2392!">Cities: 2392 Cities (Padberg/Rinaldi)</option>
+          <option class="euc_2d" value="pcb3038">Drilling: 3038 Holes (Juenger/Reinelt)</option>
+          <option class="euc_2d" value="fl3795">Drilling: 3795 Holes (Reinelt)</option>
+          <option class="euc_2d" value="fnl4461">
+            Germany: 4461 points in ex-DDR (Bachem/Wottawa)
+          </option>
+          <option class="euc_2d" value="rl5915">Cities: 5915 Cities (Reinelt)</option>
+          <option class="euc_2d" value="rl5934">Cities: 5934 Cities (Reinelt)</option>
+          <option class="ceil_2d" value="pla7397">
+            Programmed Logic Array: 7397 Sites (Johnson)
+          </option>
+          <option class="euc_2d" value="rl11849">Cities: 11849 Cities (Reinelt)</option>
+          <option class="euc_2d" value="usa13509">USA: 13509 Cities (Applegate/Rohe)</option>
+          <option class="euc_2d" value="brd14051">
+            W. Germany: 14051 Locations (Bachem/Wottawa)
+          </option>
+          <option class="euc_2d" value="d15112">Germany: 15112 Locations (A. Rohe)</option>
+          <option class="euc_2d" value="d18512">Germany: 18152 Locations (Bachem/Wottawa)</option>
+          <option class="ceil_2d" value="pla33810">
+            Programmed Logic Array: 33810 Sites (Johnson)
+          </option>
+          <option class="ceil_2d" value="pla85900">
+            Programmed Logic Array: 85900 Sites (Johnson)
+          </option>
+        </select>
+        <input
+          type="button"
+          id="P_loadproblemurl"
+          value="Load"
+          onclick="loadProblemURL(document.getElementById('P_problemurl').value, false);"
+        />
+        <br />
+        <label id="checkOptimal">
+          <input type="checkbox" id="showOptimal" onchange="changed=true;" />
+          Show optimal solution
+        </label>
+      </div>
+    </div>
+  </body>
+</html>
